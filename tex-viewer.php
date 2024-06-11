@@ -7,7 +7,7 @@ $texFile = realpath($fileName . '.tex');
 $pdfFile = $fileName . '.pdf';
 $imageFile = $fileName . '.png';
 
-if ($texFile === false || strpos($texFile, dirname(__FILE__)) !== 0) {
+if ($texFile === false || strpos($texFile, dirname($_SERVER["SCRIPT_FILENAME"])) !== 0) {
     http_response_code(404);
     die("$fileName.tex is not in the allowed directory.");
 }
