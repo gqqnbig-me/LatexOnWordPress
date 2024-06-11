@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
 
-$fileName = urldecode($_GET["file"]);
+// The GET variables are passed through urldecode().
+$fileName = $_GET["file"];
 $texFile = realpath($fileName . '.tex');
 $pdfFile = $fileName . '.pdf';
 $imageFile = $fileName . '.png';
