@@ -2,7 +2,12 @@
 declare(strict_types=1);
 
 // The GET variables are passed through urldecode().
-$fileName = $_GET["file"];
+$fileName = $_GET["file"] ?? null;
+if (!$fileName) {
+	http_response_code(422);
+	die('Query string "file" is missing. You usually visit this page from figures in blog posts.');
+}
+
 $texFile = realpath($fileName . '.tex');
 $pdfFile = $fileName . '.pdf';
 $imageFile = $fileName . '.png';
