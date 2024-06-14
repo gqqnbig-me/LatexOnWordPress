@@ -23,7 +23,8 @@ if ($res === false || $res === 0)
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<?= "<title>Compiled image from $texFile</title>" ?>
 <body>
 
 <div>
