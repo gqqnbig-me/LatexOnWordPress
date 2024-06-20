@@ -76,3 +76,57 @@ function WPTEX_custom_post_type_compiled_figures() {
 }
 add_action( 'init', 'WPTEX_custom_post_type_compiled_figures', 0 );
 
+
+$WPTEX_render_meta_box = function ($post) {
+	$latex_code = get_post_meta($post->ID, 'latex_code', true);
+
+	?>
+    <label for="latex_code">Full LaTeX/TikZ code:</label><br>
+    <textarea id="latex_code" name="latex_code" rows="20"
+              style="width: 100%;"><?php echo esc_textarea($latex_code); ?></textarea>
+	<?php
+
+	$img_format = get_post_meta($post->ID, 'img_format', true);
+	switch ($img_format) {
+		case "gif":
+			break;
+		default:
+			$img_format = "png";
+	}
+
+	?>
+    <label for="img_format">Image Format</label>
+    <select id="img_format" name="img_format">
+        <option value="gif" <?= $img_format == 'gif' ? ' selected' : '' ?> >GIF</option>
+        <option value="png" <?= $img_format == 'png' ? ' selected' : '' ?> >PNG</option>
+    </select>
+	<?php
+
+};
+
+// Add Meta Box for LaTeX Code
+$WPTEX_add_latex_code_meta_box = function () {
+	global $WPTEX_render_meta_box;
+	add_meta_box(
+		'latex_code_meta_box',
+		'LaTeX Content',
+		$WPTEX_render_meta_box,
+		'compiled_figure'
+	);
+};
+
+add_action('add_meta_boxes', $WPTEX_add_latex_code_meta_box);
+
+
+// Save Meta Box data
+function save_latex_code_meta_box($post_id)
+{
+	if (isset($_POST['latex_code']))
+		update_post_meta($post_id, 'latex_code', sanitize_textarea_field($_POST['latex_code']));
+
+	if (isset($_POST['img_format']))
+		update_post_meta($post_id, 'img_format', sanitize_text_field($_POST['img_format']));
+
+}
+
+add_action('save_post', 'save_latex_code_meta_box');
