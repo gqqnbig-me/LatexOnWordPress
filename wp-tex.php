@@ -121,8 +121,11 @@ add_action('add_meta_boxes', $WPTEX_add_latex_code_meta_box);
 // Save Meta Box data
 function save_latex_code_meta_box($post_id)
 {
-	if (isset($_POST['latex_code']))
-		update_post_meta($post_id, 'latex_code', sanitize_textarea_field($_POST['latex_code']));
+	if (isset($_POST['latex_code'])) {
+		// don't call sanitize_textarea_field because it will remove angular brackets which is harmless in Latex.
+        // TODO: call file extension to check the content.
+		update_post_meta($post_id, 'latex_code', $_POST['latex_code']);
+	}
 
 	if (isset($_POST['img_format']))
 		update_post_meta($post_id, 'img_format', sanitize_text_field($_POST['img_format']));
