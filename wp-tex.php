@@ -121,18 +121,55 @@ add_action('add_meta_boxes', $WPTEX_add_latex_code_meta_box);
 // Save Meta Box data
 function save_latex_code_meta_box($post_id)
 {
+	$latex_code = null;
 	if (isset($_POST['latex_code'])) {
 		// don't call sanitize_textarea_field because it will remove angular brackets which is harmless in Latex.
-        // TODO: call file extension to check the content.
-		update_post_meta($post_id, 'latex_code', $_POST['latex_code']);
+		// TODO: call the file info extension to check the content.
+		$latex_code = $_POST['latex_code'];
+		update_post_meta($post_id, 'latex_code', $latex_code);
+
 	}
 
 	if (isset($_POST['img_format']))
 		update_post_meta($post_id, 'img_format', sanitize_text_field($_POST['img_format']));
 
+	if (isset($_POST['compile-latex']) && !is_null($latex_code)) {
+		$upload_dir = wp_upload_dir();
+		$compiled_fig_path = trailingslashit($upload_dir['basedir']) . 'compiled_figures/';
+
+		$tex_file = $compiled_fig_path . 'figure_' . $post_id . '.tex';
+
+		// WordPress adds slashes to $_POST, $_GET, $_REQUEST, $_COOKIE
+		file_put_contents($tex_file, stripslashes($latex_code));
+		$xelatex_command = "xelatex -interaction=nonstopmode -output-directory=$compiled_fig_path $tex_file";
+
+		exec($xelatex_command, $log, $result_code);
+
+		if ($result_code != 0) {
+			set_transient('latex_compilation_log_' . $post_id, implode("\n", $log), MINUTE_IN_SECONDS * 5);
+		}
+	} elseif (isset($_POST['compile-image'])) {
+		// Assume btnSubmit
+	}
+
 }
 
 add_action('save_post', 'save_latex_code_meta_box');
+
+function display_latex_compilation_notice()
+{
+//	if (isset($_GET['latex_compilation']) && $_GET['latex_compilation'] === 'true') {
+	$post_id = isset($_GET['post']) ? intval($_GET['post']) : 0;
+	$log = get_transient('latex_compilation_log_' . $post_id);
+
+	if (!empty($log)) {
+		echo '<div class="notice notice-info"><p><strong>LaTeX Compilation Log:</strong><br>' . nl2br(esc_html($log)) . '</p></div>';
+		// Delete transient after displaying
+		delete_transient('latex_compilation_log_' . $post_id);
+	}
+}
+
+add_action('admin_notices', 'display_latex_compilation_notice');
 
 
 // Display Compiled Figures on Single Post Page
