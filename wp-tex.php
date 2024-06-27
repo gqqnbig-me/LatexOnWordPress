@@ -77,29 +77,34 @@ function WPTEX_custom_post_type_compiled_figures() {
 add_action( 'init', 'WPTEX_custom_post_type_compiled_figures', 0 );
 
 
-$WPTEX_render_meta_box = function ($post) {
+$WPTEX_render_meta_box = function (WP_Post $post) {
 	$latex_code = get_post_meta($post->ID, 'latex_code', true);
 
 	?>
     <label for="latex_code">Full LaTeX/TikZ code:</label><br>
     <textarea id="latex_code" name="latex_code" rows="20"
-              style="width: 100%;"><?php echo esc_textarea($latex_code); ?></textarea>
+              style="width: 100%;"><?= esc_textarea($latex_code); ?></textarea>
 	<?php
 
+	$magick_image_settings = get_post_meta($post->ID, 'magick_image_settings', true);
+	$magick_image_operators = get_post_meta($post->ID, 'magick_image_operators', true);
 	$img_format = get_post_meta($post->ID, 'img_format', true);
-	switch ($img_format) {
-		case "gif":
-			break;
-		default:
-			$img_format = "png";
-	}
 
 	?>
-    <label for="img_format">Image Format</label>
-    <select id="img_format" name="img_format">
-        <option value="gif" <?= $img_format == 'gif' ? ' selected' : '' ?> >GIF</option>
-        <option value="png" <?= $img_format == 'png' ? ' selected' : '' ?> >PNG</option>
-    </select>
+    Image conversion command line:
+    <div>
+        magick
+        <textarea id="magick_image_settings" name="magick_image_settings" rows="10"
+                  style="width: 100%;"><?= esc_textarea($magick_image_settings); ?></textarea>
+        "<?= $post->post_title ?>.pdf"
+        <textarea id="magick_image_operators" name="magick_image_operators" rows="10"
+                  style="width: 100%;"><?= esc_textarea($magick_image_operators); ?></textarea>
+        "<?= $post->post_title ?>
+        <select id="img_format" name="img_format">
+            <option value="gif" <?= $img_format == 'gif' ? ' selected' : '' ?> >.gif</option>
+            <option value="png" <?= $img_format == 'png' ? ' selected' : '' ?> >.png</option>
+        </select>"
+    </div>
 	<?php
 
 };
