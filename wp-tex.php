@@ -228,10 +228,17 @@ function display_compiled_figures($content)
 		$upload_path = trailingslashit($upload_dir['basedir']) . 'compiled_figures/';
 		$upload_url = trailingslashit($upload_dir['baseurl']) . 'compiled_figures/';
 
-        // image box
+		$img_format = get_post_meta($post->ID, 'img_format', true);
+		switch ($img_format) {
+			case "gif":
+				break;
+			default:
+				$img_format = "png";
+		}
+		// image box
 		$content .= '<div>';
-		if (file_exists($upload_path . 'figure_' . $post->ID . '.png'))
-			$content .= '<img style="max-width: 90%;" src="' . esc_url($upload_url . 'figure_' . $post->ID . '.png') . '" alt="Compiled Figure">';
+		if (file_exists($upload_path . 'figure_' . $post->ID . '.' . $img_format))
+			$content .= '<img style="max-width: 90%;" src="' . esc_url($upload_url . 'figure_' . $post->ID . '.' . $img_format) . '" alt="Compiled Figure">';
 		else
 			$content .= 'Image not generated';
 		$content .= '</div>';
