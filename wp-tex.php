@@ -117,6 +117,31 @@ $WPTEX_add_latex_code_meta_box = function () {
 
 add_action('add_meta_boxes', $WPTEX_add_latex_code_meta_box);
 
+function get_proc_output($handle, $pipes, &$stdout, &$stderr): int
+{
+	$timeout_in_second = 60;
+	$start = microtime(true);
+	$status = null;
+	while (microtime(true) - $start < $timeout_in_second) {
+		$status = proc_get_status($handle);
+		if (!$status['running'])
+			break;
+
+		usleep(1000);
+	}
+
+	if (is_null($status) == false && $status['running']) {
+		proc_terminate($handle);
+		$stdout = stream_get_contents($pipes[1]);
+		$stderr = stream_get_contents($pipes[2]);
+	} else {
+		$stdout = stream_get_contents($pipes[1]);
+		$stderr = stream_get_contents($pipes[2]);
+	}
+	$exitcode = proc_close($handle);
+
+	return $exitcode;
+}
 
 // Save Meta Box data
 function save_latex_code_meta_box($post_id)
