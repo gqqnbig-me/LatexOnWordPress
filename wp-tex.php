@@ -109,6 +109,11 @@ $WPTEX_render_meta_box = function (WP_Post $post) {
 
 };
 
+$WPTEX_render_compilation_meta_box = function () {
+	submit_button("Compile LaTeX", 'primary', 'compile-latex');
+	submit_button("Compile Image", 'primary', 'compile-image');
+};
+
 // Add Meta Box for LaTeX Code
 $WPTEX_add_latex_code_meta_box = function () {
 	global $WPTEX_render_meta_box;
@@ -117,6 +122,15 @@ $WPTEX_add_latex_code_meta_box = function () {
 		'LaTeX Content',
 		$WPTEX_render_meta_box,
 		'compiled_figure'
+	);
+
+	global $WPTEX_render_compilation_meta_box;
+	add_meta_box(
+		'latex_compilation_meta_box',
+		'Compile',
+		$WPTEX_render_compilation_meta_box,
+		'compiled_figure',
+		'side'
 	);
 };
 
