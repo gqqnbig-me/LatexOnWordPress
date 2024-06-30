@@ -268,57 +268,6 @@ function display_latex_compilation_notice()
 add_action('admin_notices', 'display_latex_compilation_notice');
 
 
-// Display Compiled Figures on Single Post Page
-function display_compiled_figures($content)
-{
-	global $post;
-
-	// Check if it's a single post of the compiled_figure type
-	if (is_singular('compiled_figure') && !is_admin()) {
-		//	$tex_file = $upload_path . 'figure_' . $post_id . '.tex';
-		$upload_dir = wp_upload_dir();
-		$upload_path = trailingslashit($upload_dir['basedir']) . 'compiled_figures/';
-		$upload_url = trailingslashit($upload_dir['baseurl']) . 'compiled_figures/';
-
-		$img_format = get_post_meta($post->ID, 'img_format', true);
-		switch ($img_format) {
-			case "gif":
-				break;
-			default:
-				$img_format = "png";
-		}
-		// image box
-		$content .= '<div>';
-		if (file_exists($upload_path . 'figure_' . $post->ID . '.' . $img_format))
-			$content .= '<img style="max-width: 90%;" src="' . esc_url($upload_url . 'figure_' . $post->ID . '.' . $img_format) . '" alt="Compiled Figure">';
-		else
-			$content .= 'Image not generated';
-		$content .= '</div>';
-
-        //pdf box
-		$content .= '<div>';
-		if (file_exists($upload_path . 'figure_' . $post->ID . '.pdf'))
-			$content .= '<a href="' . esc_url($upload_url . 'figure_' . $post->ID . '.pdf') . '">Download PDF</a>';
-		else
-			$content .= 'PDF not generated';
-		$content .= '</div>';
-
-
-		$latex_code = get_post_meta($post->ID, 'latex_code', true);
-		$content .= '<div>';
-		$content .= '<pre><code class="language-latex">' . esc_html($latex_code) . '</code></pre>';
-		$content .= '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/vs.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/latex.min.js"></script>
-<script>hljs.highlightAll();</script>';
-		$content .= '</div>';
-	}
-
-	return $content;
-}
-
-add_filter('the_content', 'display_compiled_figures');
-
 // Register custom template for compiled_figure custom post type
 function custom_plugin_register_templates($template) {
 	$post_types = array('compiled_figure');
