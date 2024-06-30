@@ -319,3 +319,19 @@ function display_compiled_figures($content)
 
 add_filter('the_content', 'display_compiled_figures');
 
+// Register custom template for compiled_figure custom post type
+function custom_plugin_register_templates($template) {
+	$post_types = array('compiled_figure');
+
+	if (is_singular($post_types)) {
+		$template_path = plugin_dir_path(__FILE__) . 'templates/single-compiled_figure.php';
+		if ($template_path) {
+			return $template_path;
+		}
+	}
+
+	return $template;
+}
+add_filter('single_template', 'custom_plugin_register_templates');
+
+
