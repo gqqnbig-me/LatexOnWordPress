@@ -163,8 +163,7 @@ function get_proc_output($handle, $pipes, &$stdout, &$stderr): int
 }
 
 // Save Meta Box data
-function save_latex_code_meta_box($post_id)
-{
+$WPTEX_save_latex_code_meta_box = function ($post_id, $post) {
 	$latex_code = null;
 	if (isset($_POST['latex_code'])) {
 		// don't call sanitize_textarea_field because it will remove angular brackets which is harmless in Latex.
@@ -174,31 +173,84 @@ function save_latex_code_meta_box($post_id)
 
 	}
 
-	if (isset($_POST['img_format']))
-		update_post_meta($post_id, 'img_format', sanitize_text_field($_POST['img_format']));
-
-	if (isset($_POST['compile-latex']) && !is_null($latex_code)) {
-		$upload_dir = wp_upload_dir();
-		$compiled_fig_path = trailingslashit($upload_dir['basedir']) . 'compiled_figures/';
-
-		$tex_file = $compiled_fig_path . 'figure_' . $post_id . '.tex';
-
-		// WordPress adds slashes to $_POST, $_GET, $_REQUEST, $_COOKIE
-		file_put_contents($tex_file, stripslashes($latex_code));
-		$xelatex_command = "xelatex -interaction=nonstopmode -output-directory=$compiled_fig_path $tex_file";
-
-		exec($xelatex_command, $log, $result_code);
-
-		if ($result_code != 0) {
-			set_transient('latex_compilation_log_' . $post_id, implode("\n", $log), MINUTE_IN_SECONDS * 5);
+	$img_format = null;
+	if (isset($_POST['img_format'])) {
+		$img_format = sanitize_text_field($_POST['img_format']);
+		switch ($img_format) {
+			case "gif":
+				break;
+			default:
+				$img_format = "png";
 		}
-	} elseif (isset($_POST['compile-image'])) {
-		// Assume btnSubmit
+		update_post_meta($post_id, 'img_format', $img_format);
 	}
 
-}
+	$magick_image_settings = null;
+	if (isset($_POST['magick_image_settings'])) {
+		$magick_image_settings = $_POST['magick_image_settings'];
+		update_post_meta($post_id, 'magick_image_settings', $magick_image_settings);
+	}
+	$magick_image_operators = null;
+	if (isset($_POST['magick_image_settings'])) {
+		$magick_image_operators = $_POST['magick_image_operators'];
+		update_post_meta($post_id, 'magick_image_operators', $magick_image_operators);
+	}
 
-add_action('save_post', 'save_latex_code_meta_box');
+	$upload_dir = wp_upload_dir();
+	$upload_path = trailingslashit($upload_dir['basedir']) . 'compiled_figures/';
+
+	if (isset($_POST['compile-latex']) && !is_null($latex_code)) {
+		compile_latex($post, $latex_code, $upload_path);
+	} elseif (isset($_POST['compile-image']) && !is_null($magick_image_settings) && !is_null($magick_image_operators)) {
+		$source_file = $upload_path . 'figure_' . $post->ID . '.pdf';
+		$target_file = $upload_path . 'figure_' . $post->ID . '.' . $img_format;
+
+
+		if (file_exists($source_file)) {
+			# proc_open can accept an array as the command, with each element as an argument.
+			# But here user provides a group of arguments.
+			# I either have to split them into individual options, or join everything into one string.
+			# Here I choose to join them.
+			$magick_command = implode(' ', array('magick',
+				clean_up_command_arguments($magick_image_settings),
+				escapeshellarg($source_file),
+				clean_up_command_arguments($magick_image_operators),
+				escapeshellarg($target_file),
+			));
+
+			// proc_open may print errors to a side channel, which is not an exception.
+			// I can turn it off with `error_reporting(ERROR)` but I can't capture the error.
+			// The error message is only available on stderr or the web page.
+			$handle = proc_open($magick_command, [
+				0 => ["pipe", "r"],  // stdin
+				1 => ["pipe", "w"],  // stdout
+				2 => ["pipe", "w"],  // stderr
+			], $pipes, null, null, ['bypass_shell' => true]);
+
+			if (!is_resource($handle)) {
+				set_transient('latex_compilation_log_' . $post_id, "Command line failed:\n" . $magick_command, MINUTE_IN_SECONDS * 5);
+				return;
+			}
+
+			$exit_code = get_proc_output($handle, $pipes, $stdout, $stderr);
+
+			if ($exit_code != 0) {
+				$message = "magick command line error:\n";
+				if (strlen($stderr) > 200) {
+					$message .= '...\n';
+					$message .= substr($stderr, -200);
+				} else
+					$message .= $stderr;
+				set_transient('latex_compilation_log_' . $post->ID, $message, MINUTE_IN_SECONDS * 5);
+			}
+		} else {
+			set_transient('latex_compilation_log_' . $post_id, "PDF hasn't been compiled.", MINUTE_IN_SECONDS * 5);
+		}
+	}
+
+};
+
+add_action('save_post', $WPTEX_save_latex_code_meta_box, 10, 2);
 
 function display_latex_compilation_notice()
 {
