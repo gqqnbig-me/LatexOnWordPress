@@ -22,59 +22,62 @@ function WPTEX_mime_types($mime_types)
 add_filter('upload_mimes', 'WPTEX_mime_types');
 
 // Register Custom Post Type for Compiled Figures
-function WPTEX_custom_post_type_compiled_figures() {
+$WPTEX_custom_post_type_compiled_figures = function () {
 
-    $labels = array(
-        'name'                  => _x( 'Compiled Figures', 'Post Type General Name', 'text_domain' ),
-        'singular_name'         => _x( 'Compiled Figure', 'Post Type Singular Name', 'text_domain' ),
-        'menu_name'             => __( 'Compiled Figures', 'text_domain' ),
-        'name_admin_bar'        => __( 'Compiled Figure', 'text_domain' ),
-        'archives'              => __( 'Compiled Figure Archives', 'text_domain' ),
-        'attributes'            => __( 'Compiled Figure Attributes', 'text_domain' ),
-        'parent_item_colon'     => __( 'Parent Compiled Figure:', 'text_domain' ),
-        'all_items'             => __( 'All Compiled Figures', 'text_domain' ),
-        'add_new_item'          => __( 'Add New Compiled Figure', 'text_domain' ),
-        'add_new'               => __( 'Add New', 'text_domain' ),
-        'new_item'              => __( 'New Compiled Figure', 'text_domain' ),
-        'edit_item'             => __( 'Edit Compiled Figure', 'text_domain' ),
-        'update_item'           => __( 'Update Compiled Figure', 'text_domain' ),
-        'view_item'             => __( 'View Compiled Figure', 'text_domain' ),
-        'view_items'            => __( 'View Compiled Figures', 'text_domain' ),
-        'search_items'          => __( 'Search Compiled Figures', 'text_domain' ),
-        'not_found'             => __( 'Not found', 'text_domain' ),
-        'not_found_in_trash'    => __( 'Not found in Trash', 'text_domain' ),
-        'featured_image'        => __( 'Featured Image', 'text_domain' ),
-        'set_featured_image'    => __( 'Set featured image', 'text_domain' ),
-        'remove_featured_image' => __( 'Remove featured image', 'text_domain' ),
-        'use_featured_image'    => __( 'Use as featured image', 'text_domain' ),
-        'insert_into_item'      => __( 'Insert into compiled figure', 'text_domain' ),
-        'uploaded_to_this_item' => __( 'Uploaded to this compiled figure', 'text_domain' ),
-        'items_list'            => __( 'Compiled Figures list', 'text_domain' ),
-        'items_list_navigation' => __( 'Compiled Figures list navigation', 'text_domain' ),
-        'filter_items_list'     => __( 'Filter compiled figures list', 'text_domain' ),
-    );
-    $args = array(
-        'label'                 => __( 'Compiled Figure', 'text_domain' ),
-        'description'           => __( 'Post type for Compiled Figures', 'text_domain' ),
-        'labels'                => $labels,
-        'supports'              => array( 'title', 'editor' ),
-        'hierarchical'          => false,
-        'public'                => true,
-        'show_ui'               => true,
-        'show_in_menu'          => true,
-        'menu_position'         => 5,
-        'show_in_admin_bar'     => true,
-        'show_in_nav_menus'     => true,
-        'can_export'            => true,
-        'exclude_from_search'   => false,
-        'publicly_queryable'    => true,
-        'capability_type'       => 'post',
-        'show_in_rest'          => true,
-    );
-    register_post_type( 'compiled_figure', $args );
+	$labels = array(
+		'name' => _x('Compiled Figures', 'Post Type General Name', 'text_domain'),
+		'singular_name' => _x('Compiled Figure', 'Post Type Singular Name', 'text_domain'),
+//		'menu_name' => __('Compiled Figures', 'text_domain'),
+//		'name_admin_bar' => __('Compiled Figure', 'text_domain'),
+//		'archives' => __('Compiled Figure Archives', 'text_domain'),
+//		'attributes' => __('Compiled Figure Attributes', 'text_domain'),
+//		'parent_item_colon' => __('Parent Compiled Figure:', 'text_domain'),
+		'all_items' => __('All Compiled Figures', 'text_domain'),
+		'add_new_item' => __('Add New Compiled Figure', 'text_domain'),
+		'add_new' => __('Add New', 'text_domain'),
+//		'new_item' => __('New Compiled Figure', 'text_domain'),
+//		'edit_item' => __('Edit Compiled Figure', 'text_domain'),
+//		'update_item' => __('Update Compiled Figure', 'text_domain'),
+//		'view_item' => __('View Compiled Figure', 'text_domain'),
+//		'view_items' => __('View Compiled Figures', 'text_domain'),
+//		'search_items' => __('Search Compiled Figures', 'text_domain'),
+//		'not_found' => __('Not found', 'text_domain'),
+//		'not_found_in_trash' => __('Not found in Trash', 'text_domain'),
+//		'featured_image' => __('Featured Image', 'text_domain'),
+//		'set_featured_image' => __('Set featured image', 'text_domain'),
+//		'remove_featured_image' => __('Remove featured image', 'text_domain'),
+//		'use_featured_image' => __('Use as featured image', 'text_domain'),
+//		'insert_into_item' => __('Insert into compiled figure', 'text_domain'),
+//		'uploaded_to_this_item' => __('Uploaded to this compiled figure', 'text_domain'),
+//		'items_list' => __('Compiled Figures list', 'text_domain'),
+//		'items_list_navigation' => __('Compiled Figures list navigation', 'text_domain'),
+//		'filter_items_list' => __('Filter compiled figures list', 'text_domain'),
+	);
+	$args = array(
+		'label' => __('Compiled Figure', 'text_domain'),
+//		'description' => __('Post type for Compiled Figures', 'text_domain'),
+		'public' => true,
+		'labels' => $labels,
+		// Don't add 'custom-fields' because 'custom-fields' by default are key value pairs. Users can input any key and value.
+		'supports' => array('title'),
+//		'hierarchical' => false,
+//		'show_ui' => true,
+//		'show_in_menu' => true,
+//		'menu_position' => 5,
+//		'show_in_admin_bar' => true,
+//		'show_in_nav_menus' => true,
+//		'can_export' => true,
+//		'exclude_from_search' => false,
+//		'publicly_queryable' => true,
+//		'capability_type' => 'post',
+//		'show_in_rest' => false,
+	);
+	register_post_type('compiled_figure', $args);
 
-}
-add_action( 'init', 'WPTEX_custom_post_type_compiled_figures', 0 );
+};
+
+
+add_action('init', $WPTEX_custom_post_type_compiled_figures, 0);
 
 
 $WPTEX_render_meta_box = function (WP_Post $post) {
@@ -151,15 +154,48 @@ function get_proc_output($handle, $pipes, &$stdout, &$stderr): int
 
 	if (is_null($status) == false && $status['running']) {
 		proc_terminate($handle);
-		$stdout = stream_get_contents($pipes[1]);
-		$stderr = stream_get_contents($pipes[2]);
-	} else {
-		$stdout = stream_get_contents($pipes[1]);
-		$stderr = stream_get_contents($pipes[2]);
 	}
+	$stdout = stream_get_contents($pipes[1]);
+	$stderr = stream_get_contents($pipes[2]);
 	$exitcode = proc_close($handle);
 
 	return $exitcode;
+}
+
+/**
+ * @param WP_Post $post
+ * @param string $latex_code
+ * @param string $compiled_fig_path already has a trailing slash.
+ * @return void
+ */
+function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_path)
+{
+	$tex_file = $compiled_fig_path . 'figure_' . $post->ID . '.tex';
+
+	// WordPress adds slashes to $_POST, $_GET, $_REQUEST, $_COOKIE
+	file_put_contents($tex_file, stripslashes($latex_code));
+	$xelatex_command = "xelatex -interaction=nonstopmode -output-directory=$compiled_fig_path $tex_file";
+
+	exec($xelatex_command, $log, $result_code);
+
+	if ($result_code != 0) {
+		$message = "xelatex command line output:\n";
+		if (count($log) > 200) {
+			$message .= '...\n';
+			$message .= implode("\n", array_slice($log, -200));
+		} else
+			$message .= implode("\n", $log);
+		set_transient('latex_compilation_log_' . $post->ID, $message, MINUTE_IN_SECONDS * 5);
+	}
+}
+
+function clean_up_command_arguments(string $args)
+{
+	# remove comments
+	$args = preg_replace('/#.+\n/', ' ', $args);
+	# join lines
+	$args = preg_replace('/[\r\n]/', ' ', $args);
+	return $args;
 }
 
 // Save Meta Box data
@@ -259,7 +295,7 @@ function display_latex_compilation_notice()
 	$log = get_transient('latex_compilation_log_' . $post_id);
 
 	if (!empty($log)) {
-		echo '<div class="notice notice-info"><p><strong>LaTeX Compilation Log:</strong><br>' . nl2br(esc_html($log)) . '</p></div>';
+		echo '<div class="notice notice-error">' . nl2br(esc_html($log)) . '</p></div>';
 		// Delete transient after displaying
 		delete_transient('latex_compilation_log_' . $post_id);
 	}
