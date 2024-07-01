@@ -221,6 +221,8 @@ $WPTEX_save_latex_code_meta_box = function ($post_id, $post) {
 
 	$upload_dir = wp_upload_dir();
 	$upload_path = trailingslashit($upload_dir['basedir']) . 'compiled_figures/';
+	if (is_dir($upload_path) === false)
+		mkdir($upload_path, 0755);
 
 	if (isset($_POST['compile-latex']) && !is_null($latex_code)) {
 		compile_latex($post, $latex_code, $upload_path);
