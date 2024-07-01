@@ -335,3 +335,77 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 }
 
 new Tex_Viewer_Plugin();
+
+
+class TeXViewerSettingsPage
+{
+	/**
+	 * Start up
+	 */
+	public function __construct()
+	{
+		add_action('admin_menu', array($this, 'add_plugin_page'));
+//		add_action('admin_init', array($this, 'page_init'));
+	}
+
+	/**
+	 * Add options page
+	 */
+	public function add_plugin_page()
+	{
+		// This page will be under "Settings"
+		add_options_page(
+			'Tex Viewer Settings',
+			'Tex Viewer Settings',
+			'manage_options',
+			'tex-viewer-settings',
+			array($this, 'create_admin_page')
+		);
+	}
+
+	/**
+	 * Options page callback
+	 */
+	public function create_admin_page()
+	{
+		$handle = popen('xelatex --version', 'r');
+		$xelatex_output = '';
+		if ($handle !== false) {
+			$xelatex_output = fread($handle, 2096);
+			pclose($handle);
+		}
+		if (strpos($xelatex_output, 'XeTeX') === false)
+			$xelatex_output = 'Not Found';
+
+		$handle = popen('magick --version', 'r');
+		$magick_output = '';
+		if ($handle !== false) {
+			$magick_output = fread($handle, 2096);
+			pclose($handle);
+		}
+		if (strpos($magick_output, 'ImageMagick') === false)
+			$magick_output = 'Not Found';
+
+		?>
+        <div class="wrap">
+            <h2>Tex Viewer Settings</h2>
+            <div>
+                xelatex:
+                <div>
+					<?= nl2br(esc_html($xelatex_output)) ?>
+                </div>
+            </div>
+            <div>
+                magick:
+                <div>
+					<?= nl2br(esc_html($magick_output)) ?>
+                </div>
+            </div>
+        </div>
+		<?php
+	}
+}
+
+
+if (is_admin())
+	$tex_viewer_settings_page = new TeXViewerSettingsPage();
