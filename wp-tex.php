@@ -129,6 +129,9 @@ function get_proc_output($handle, $pipes, &$stdout, &$stderr): int
 	$status = null;
 	while (microtime(true) - $start < $timeout_in_second) {
 		$status = proc_get_status($handle);
+
+		$stdout .= stream_get_contents($pipes[1]);
+		$stderr .= stream_get_contents($pipes[2]);
 		if (!$status['running'])
 			break;
 
@@ -138,8 +141,8 @@ function get_proc_output($handle, $pipes, &$stdout, &$stderr): int
 	if (is_null($status) == false && $status['running']) {
 		proc_terminate($handle);
 	}
-	$stdout = stream_get_contents($pipes[1]);
-	$stderr = stream_get_contents($pipes[2]);
+	$stdout .= stream_get_contents($pipes[1]);
+	$stderr .= stream_get_contents($pipes[2]);
 	$exitcode = proc_close($handle);
 
 	return $exitcode;
@@ -175,7 +178,7 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 	}
 
 	$result_code = get_proc_output($handle, $pipes, $stdout, $stderr);
-    
+
 	if ($result_code != 0) {
 		$message = "xelatex command line output:\n";
 		if (count($stderr) > 200) {
