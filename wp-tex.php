@@ -4,8 +4,27 @@
  */
 
 
-// Register Custom Post Type for Compiled Figures
-$WPTEX_custom_post_type_compiled_figures = function () {
+class Tex_Viewer_Plugin
+{
+	public function __construct()
+	{
+		// add_action is essentially php call_user_func.
+		// The callable can be an array.
+
+		// A method of an instantiated object is passed as an array containing an object at index 0 and the method name at index 1.
+		// Accessing protected and private methods from *within a class* is allowed.
+
+		// Also, a PHP function is passed by its name as a string.
+		// https://www.php.net/manual/en/language.types.callable.php
+		add_action('init', array($this, 'register_custom_post_type_compiled_figures'));
+		add_action('add_meta_boxes', array($this, 'add_meta_boxes'));
+		add_action('save_post', array($this, 'save_meta_boxes'), 10, 2);
+		add_action('admin_notices', array($this, 'display_compilation_log'));
+		add_filter('single_template', array($this, 'custom_plugin_register_templates'));
+	}
+
+	function register_custom_post_type_compiled_figures()
+	{
 
 	$labels = array(
 		'name' => _x('Compiled Figures', 'Post Type General Name', 'text_domain'),
@@ -57,14 +76,12 @@ $WPTEX_custom_post_type_compiled_figures = function () {
 	);
 	register_post_type('compiled_figure', $args);
 
-};
+	}
 
 
-add_action('init', $WPTEX_custom_post_type_compiled_figures, 0);
-
-
-$WPTEX_render_meta_box = function (WP_Post $post) {
-	$latex_code = get_post_meta($post->ID, 'latex_code', true);
+	function render_code_meta_box(WP_Post $post)
+	{
+		$latex_code = get_post_meta($post->ID, 'latex_code', true);
 
 	?>
     <label for="latex_code">Full LaTeX/TikZ code:</label><br>
@@ -93,44 +110,42 @@ $WPTEX_render_meta_box = function (WP_Post $post) {
     </div>
 	<?php
 
-};
+	}
 
-$WPTEX_render_compilation_meta_box = function () {
-	submit_button("Compile LaTeX", 'primary', 'compile-latex');
-	submit_button("Compile Image", 'primary', 'compile-image');
-};
+	function render_compilation_meta_box()
+	{
+		submit_button("Compile LaTeX", 'primary', 'compile-latex');
+		submit_button("Compile Image", 'primary', 'compile-image');
+	}
 
-// Add Meta Box for LaTeX Code
-$WPTEX_add_latex_code_meta_box = function () {
-	global $WPTEX_render_meta_box;
-	add_meta_box(
-		'latex_code_meta_box',
-		'LaTeX Content',
-		$WPTEX_render_meta_box,
-		'compiled_figure'
-	);
+	function add_meta_boxes()
+	{
+		add_meta_box(
+			'latex_code_meta_box',
+			'LaTeX Content',
+			array($this, 'render_code_meta_box'),
+			'compiled_figure'
+		);
 
-	global $WPTEX_render_compilation_meta_box;
-	add_meta_box(
-		'latex_compilation_meta_box',
-		'Compile',
-		$WPTEX_render_compilation_meta_box,
-		'compiled_figure',
-		'side'
-	);
-};
+		add_meta_box(
+			'latex_compilation_meta_box',
+			'Compile',
+			array($this, 'render_compilation_meta_box'),
+			'compiled_figure',
+			'side'
+		);
+	}
 
-add_action('add_meta_boxes', $WPTEX_add_latex_code_meta_box);
 
-function get_proc_output($handle, $pipes, &$stdout, &$stderr): int
-{
+	private function get_proc_output($handle, $pipes, &$stdout, &$stderr): int
+	{
     // Reference: https://gist.github.com/Youka/f8102eacfccc35982c29
-	$timeout_in_second = 60;
-	$start = microtime(true);
-	$status = null;
+		$timeout_in_second = 60;
+		$start = microtime(true);
+		$status = null;
 	$exitcode = null;
-	while (microtime(true) - $start < $timeout_in_second) {
-		$status = proc_get_status($handle);
+		while (microtime(true) - $start < $timeout_in_second) {
+			$status = proc_get_status($handle);
 
 		$stdout .= stream_get_contents($pipes[1]);
 		$stderr .= stream_get_contents($pipes[2]);
@@ -138,7 +153,7 @@ function get_proc_output($handle, $pipes, &$stdout, &$stderr): int
 			// Only first call of this function return real value, next calls return -1.
 			// So I have to capture it immediately.
 			$exitcode = $status['exitcode'];
-			break;
+				break;
 		}
 
 		usleep(1000);
@@ -186,7 +201,7 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 		return;
 	}
 
-	$result_code = get_proc_output($handle, $pipes, $stdout, $stderr);
+		$result_code = $this->get_proc_output($handle, $pipes, $stdout, $stderr);
 
 	if ($result_code != 0) {
 		$message = "xelatex command line output:\n";
@@ -203,23 +218,23 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 	}
 }
 
-function clean_up_command_arguments(string $args)
-{
-	# remove comments
-	$args = preg_replace('/#.+\n/', ' ', $args);
-	# join lines
-	$args = preg_replace('/[\r\n]/', ' ', $args);
-	return $args;
-}
+	private function clean_up_command_arguments(string $args)
+	{
+		# remove comments
+		$args = preg_replace('/#.+\n/', ' ', $args);
+		# join lines
+		$args = preg_replace('/[\r\n]/', ' ', $args);
+		return $args;
+	}
 
-// Save Meta Box data
-$WPTEX_save_latex_code_meta_box = function ($post_id, $post) {
-	$latex_code = null;
-	if (isset($_POST['latex_code'])) {
-		// don't call sanitize_textarea_field because it will remove angular brackets which is harmless in Latex.
-		// TODO: call the file info extension to check the content.
-		$latex_code = $_POST['latex_code'];
-		update_post_meta($post_id, 'latex_code', $latex_code);
+	function save_meta_boxes($post_id, $post)
+	{
+		$latex_code = null;
+		if (isset($_POST['latex_code'])) {
+			// don't call sanitize_textarea_field because it will remove angular brackets which is harmless in Latex.
+			// TODO: call the file info extension to check the content.
+			$latex_code = $_POST['latex_code'];
+			update_post_meta($post_id, 'latex_code', $latex_code);
 
 	}
 
@@ -251,24 +266,24 @@ $WPTEX_save_latex_code_meta_box = function ($post_id, $post) {
 	if (is_dir($upload_path) === false)
 		mkdir($upload_path, 0755);
 
-	if (isset($_POST['compile-latex']) && !is_null($latex_code)) {
-		compile_latex($post, $latex_code, $upload_path);
-	} elseif (isset($_POST['compile-image']) && !is_null($magick_image_settings) && !is_null($magick_image_operators)) {
-		$source_file = $upload_path . 'figure_' . $post->ID . '.pdf';
-		$target_file = $upload_path . 'figure_' . $post->ID . '.' . $img_format;
+		if (isset($_POST['compile-latex']) && !is_null($latex_code)) {
+			$this->compile_latex($post, $latex_code, $upload_path);
+		} elseif (isset($_POST['compile-image']) && !is_null($magick_image_settings) && !is_null($magick_image_operators)) {
+			$source_file = $upload_path . 'figure_' . $post->ID . '.pdf';
+			$target_file = $upload_path . 'figure_' . $post->ID . '.' . $img_format;
 
 
-		if (file_exists($source_file)) {
-			# proc_open can accept an array as the command, with each element as an argument.
-			# But here user provides a group of arguments.
-			# I either have to split them into individual options, or join everything into one string.
-			# Here I choose to join them.
-			$magick_command = implode(' ', array('magick',
-				clean_up_command_arguments($magick_image_settings),
-				escapeshellarg($source_file),
-				clean_up_command_arguments($magick_image_operators),
-				escapeshellarg($target_file),
-			));
+			if (file_exists($source_file)) {
+				# proc_open can accept an array as the command, with each element as an argument.
+				# But here user provides a group of arguments.
+				# I either have to split them into individual options, or join everything into one string.
+				# Here I choose to join them.
+				$magick_command = implode(' ', array('magick',
+					$this->clean_up_command_arguments($magick_image_settings),
+					escapeshellarg($source_file),
+					$this->clean_up_command_arguments($magick_image_operators),
+					escapeshellarg($target_file),
+				));
 
 			// proc_open may print errors to a side channel, which is not an exception.
 			// I can turn it off with `error_reporting(ERROR)` but I can't capture the error.
@@ -284,7 +299,7 @@ $WPTEX_save_latex_code_meta_box = function ($post_id, $post) {
 				return;
 			}
 
-			$exit_code = get_proc_output($handle, $pipes, $stdout, $stderr);
+				$exit_code = $this->get_proc_output($handle, $pipes, $stdout, $stderr);
 
 			if ($exit_code != 0) {
 				$message = "magick command line error:\n";
@@ -304,12 +319,11 @@ $WPTEX_save_latex_code_meta_box = function ($post_id, $post) {
 		}
 	}
 
-};
+	}
 
-add_action('save_post', $WPTEX_save_latex_code_meta_box, 10, 2);
 
-function display_latex_compilation_notice()
-{
+	function display_compilation_log()
+	{
 //	if (isset($_GET['latex_compilation']) && $_GET['latex_compilation'] === 'true') {
 	$post_id = isset($_GET['post']) ? intval($_GET['post']) : 0;
 	$log = get_transient('latex_compilation_log_' . $post_id);
@@ -321,12 +335,11 @@ function display_latex_compilation_notice()
 	}
 }
 
-add_action('admin_notices', 'display_latex_compilation_notice');
-
 
 // Register custom template for compiled_figure custom post type
-function custom_plugin_register_templates($template) {
-	$post_types = array('compiled_figure');
+	function custom_plugin_register_templates($template)
+	{
+		$post_types = array('compiled_figure');
 
 	if (is_singular($post_types)) {
 		$template_path = plugin_dir_path(__FILE__) . 'templates/single-compiled_figure.php';
@@ -335,9 +348,10 @@ function custom_plugin_register_templates($template) {
 		}
 	}
 
-	return $template;
+		return $template;
+	}
+
+
 }
 
-add_filter('single_template', 'custom_plugin_register_templates');
-
-
+new Tex_Viewer_Plugin();
