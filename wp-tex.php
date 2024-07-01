@@ -181,11 +181,15 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 
 	if ($result_code != 0) {
 		$message = "xelatex command line output:\n";
-		if (count($stderr) > 200) {
-			$message .= '...\n';
-			$message .= implode("\n", array_slice($stderr, -200));
-		} else
-			$message .= implode("\n", $stderr);
+		if (strlen($stderr) > 1000)
+			$stderr = "...\n" . substr($stderr, -1000);
+		if (strlen($stdout) > 1000)
+			$stderr = "...\n" . substr($stdout, -1000);
+
+		if (strlen($stderr) > 0)
+			$message .= $stderr;
+		else
+			$message .= $stdout;
 		set_transient('latex_compilation_log_' . $post->ID, $message, MINUTE_IN_SECONDS * 5);
 	}
 }
@@ -275,11 +279,15 @@ $WPTEX_save_latex_code_meta_box = function ($post_id, $post) {
 
 			if ($exit_code != 0) {
 				$message = "magick command line error:\n";
-				if (strlen($stderr) > 200) {
-					$message .= '...\n';
-					$message .= substr($stderr, -200);
-				} else
+				if (strlen($stderr) > 1000)
+					$stderr = "...\n" . substr($stderr, -1000);
+				if (strlen($stdout) > 1000)
+					$stderr = "...\n" . substr($stdout, -1000);
+
+				if (strlen($stderr) > 0)
 					$message .= $stderr;
+				else
+					$message .= $stdout;
 				set_transient('latex_compilation_log_' . $post->ID, $message, MINUTE_IN_SECONDS * 5);
 			}
 		} else {
