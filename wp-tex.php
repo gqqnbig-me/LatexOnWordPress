@@ -163,15 +163,26 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 
 	$xelatex_command = "xelatex -interaction=nonstopmode -output-directory=$compiled_fig_path $tex_file";
 
-	exec($xelatex_command, $log, $result_code);
+	$handle = proc_open($xelatex_command, [
+		0 => ["pipe", "r"],  // stdin
+		1 => ["pipe", "w"],  // stdout
+		2 => ["pipe", "w"],  // stderr
+	], $pipes, null, null, ['bypass_shell' => true]);
 
+	if (!is_resource($handle)) {
+		set_transient('latex_compilation_log_' . $post->ID, "Command line failed:\n" . $xelatex_command, MINUTE_IN_SECONDS * 5);
+		return;
+	}
+
+	$result_code = get_proc_output($handle, $pipes, $stdout, $stderr);
+    
 	if ($result_code != 0) {
 		$message = "xelatex command line output:\n";
-		if (count($log) > 200) {
+		if (count($stderr) > 200) {
 			$message .= '...\n';
-			$message .= implode("\n", array_slice($log, -200));
+			$message .= implode("\n", array_slice($stderr, -200));
 		} else
-			$message .= implode("\n", $log);
+			$message .= implode("\n", $stderr);
 		set_transient('latex_compilation_log_' . $post->ID, $message, MINUTE_IN_SECONDS * 5);
 	}
 }
