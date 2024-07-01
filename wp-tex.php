@@ -156,7 +156,11 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 	$tex_file = $compiled_fig_path . 'figure_' . $post->ID . '.tex';
 
 	// WordPress adds slashes to $_POST, $_GET, $_REQUEST, $_COOKIE
-	file_put_contents($tex_file, stripslashes($latex_code));
+	if (file_put_contents($tex_file, stripslashes($latex_code)) === false) {
+		set_transient('latex_compilation_log_' . $post->ID, "Failed to write $tex_file.", MINUTE_IN_SECONDS * 5);
+		return;
+	}
+
 	$xelatex_command = "xelatex -interaction=nonstopmode -output-directory=$compiled_fig_path $tex_file";
 
 	exec($xelatex_command, $log, $result_code);
@@ -300,6 +304,7 @@ function custom_plugin_register_templates($template) {
 
 	return $template;
 }
+
 add_filter('single_template', 'custom_plugin_register_templates');
 
 
