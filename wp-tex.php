@@ -124,6 +124,7 @@ add_action('add_meta_boxes', $WPTEX_add_latex_code_meta_box);
 
 function get_proc_output($handle, $pipes, &$stdout, &$stderr): int
 {
+    // Reference: https://gist.github.com/Youka/f8102eacfccc35982c29
 	$timeout_in_second = 60;
 	$start = microtime(true);
 	$status = null;
