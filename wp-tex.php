@@ -1,6 +1,9 @@
 <?php
 /*
  * Plugin Name: TEX Viewer
+ * Description: Allow users to write LaTeX (mainly tikz) code in a post, and this plugin will convert the post to an image. 
+ * Version: 0.1
+ * Author: gqqnbig
  */
 
 
