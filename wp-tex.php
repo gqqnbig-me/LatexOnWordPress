@@ -340,6 +340,10 @@ new Tex_Viewer_Plugin();
 class TeXViewerSettingsPage
 {
 	private const page_slug = "tex-viewer";
+	private const  options_name = 'tex-viewer-options';
+	private ?string $xelatex_info;
+	private ?string $magick_info;
+
 
 	/**
 	 * Start up
@@ -352,6 +356,30 @@ class TeXViewerSettingsPage
 		add_action('admin_init', array($this, 'page_init'));
 	}
 
+	public function populate_xelatex_info()
+	{
+		$handle = popen('xelatex --version', 'r');
+		if ($handle !== false) {
+			$this->xelatex_info = fread($handle, 2096);
+			pclose($handle);
+
+			if (strpos($this->xelatex_info, 'XeTeX') === false)
+				$this->xelatex_info = null;
+		}
+
+	}
+
+	public function populate_magick_info()
+	{
+		$handle = popen('magick --version', 'r');
+		if ($handle !== false) {
+			$this->magick_info = fread($handle, 2096);
+			pclose($handle);
+
+			if (strpos($this->magick_info, 'ImageMagick') === false)
+				$this->magick_info = null;
+		}
+	}
 
 	/**
 	 * Add options page
@@ -403,6 +431,21 @@ class TeXViewerSettingsPage
 				submit_button('Save Settings');
 				?>
             </form>
+
+            <!--            <div>-->
+            <!--                xelatex:-->
+            <!--                <div>-->
+            <!--					--><?php //= nl2br(esc_html($xelatex_output))
+			?>
+            <!--                </div>-->
+            <!--            </div>-->
+            <!--            <div>-->
+            <!--                magick:-->
+            <!--                <div>-->
+            <!--					--><?php //= nl2br(esc_html($magick_output))
+			?>
+            <!--                </div>-->
+            <!--            </div>-->
         </div>
 		<?php
 	}
@@ -410,7 +453,7 @@ class TeXViewerSettingsPage
 	function page_init()
 	{
 		// Register a new setting for "wporg" page.
-		register_setting('tex-viewer', 'wporg_options');
+		register_setting('tex-viewer', $this::options_name);
 
 		$setting_section_id = 'tex-viewer-path';
 		// Register a new section in the "wporg" page.
@@ -419,10 +462,27 @@ class TeXViewerSettingsPage
 			'Path settings', array($this, 'path_section_preamble'),
 			$this::page_slug
 		);
+
+		// Register a new field in the "wporg_section_developers" section, inside the "wporg" page.
+		add_settings_field(
+			'tex-viewer-xelatex-path',
+			'xelatex',
+			array($this, 'choose_xelatex_path'),
+			$this::page_slug,
+			$setting_section_id);
+
+		add_settings_field(
+			'tex-viewer-magick-path',
+			'magick',
+			array($this, 'choose_magick_path'),
+			$this::page_slug,
+			$setting_section_id);
 	}
 
 	function path_section_preamble()
 	{
+
+
 		if (PHP_OS_FAMILY === 'Linux') {
 			?>
             <div style="color:gray">
@@ -448,9 +508,95 @@ class TeXViewerSettingsPage
 				<?php
 			}
 		}
+		$options = get_option($this::options_name);
+		if ($options === false)
+			$options = array();
+		$xelatex_path = $options['xelatex-path'] ?? '';
+		$this->print_command_info($xelatex_path, 'xelatex', $this->xelatex_info);
+
+		$magick_path = $options['magick-path'] ?? '';
+		$this->print_command_info($magick_path, 'magick', $this->magick_info);
+
+		if (!is_null($this->xelatex_info) && !is_null($this->magick_info))
+			echo '<div>Self-check passed</div>';
+	}
+
+	function print_command_info($folder, $command, $version_output)
+	{
+		$whereis = PHP_OS_FAMILY === 'Linux' ? 'whereis' : 'where';
+
+		if (is_null($this->xelatex_info)) {
+			echo '<div>$ ' . $whereis . ' ' . $folder . $command . ' && ' . $folder . $command . ' --version</div>';
+			echo '<div>Command not found</div>';
+		} else {
+			if (is_null($folder) || strlen($folder) === 0) {
+				$handle = popen("$whereis $command", 'r');
+				$output = null;
+				if ($handle !== false) {
+					$output = fread($handle, 2096);
+					pclose($handle);
+				}
+
+				if (!is_null($output)) {
+					echo '<div>$ ' . $whereis . ' ' . $command . ' && ' . $command . ' --version</div>';
+					echo '<div>' . esc_html($output) . '</div>';
+				} else
+					echo '<div>$ ' . $command . ' --version</div>';
+			} else {
+				echo '<div>$ ' . $command . ' --version</div>';
+			}
+			echo '<div>' . nl2br(esc_html($version_output)) . '</div>';
+		}
+	}
+
+	function choose_xelatex_path()
+	{
+		// Get the value of the setting we've registered with register_setting()
+		$options = get_option('wporg_options');
+
+		if (is_null($this->xelatex_info))
+			echo '<label style="display: block"><input disabled type="radio"  name="xelatex-path-choice" value="default"/> Use default xelatex (NOT FOUND) </label>';
+		else {
+			echo '<label style="display: block"><input type="radio"  name="xelatex-path-choice" value="default"/> Use default xelatex</label>';
+			echo '<pre>$ xelatex --version <div style="color:#0550ae">' . esc_html($this->xelatex_info) . '</div></pre>';
+		}
+
+		?>
+        <label style="display: block"><input type="radio" name="xelatex-path-choice" value="user"/> Specify the path for
+            xelatex</label>
+        <div>
+            <input style="width: 30em" type="text" name="xelatex-path"
+                   placeholder="/opt/texlive2024/bin/x86_64-linux/"/>xelatex
+        </div>
+		<?php
+	}
+
+	function choose_magick_path()
+	{
+		// Get the value of the setting we've registered with register_setting()
+		$options = get_option('wporg_options');
+
+		if (is_null($this->magick_info))
+			echo '<label style="display: block"><input disabled type="radio"  name="magick-path-choice" value="default"/> Use default magick (NOT FOUND) </label>';
+		else {
+			echo '<label style="display: block"><input type="radio"  name="magick-path-choice" value="default"/> Use default magick</label>';
+			echo '<pre>' . esc_html($this->magick_info) . '</pre>';
+		}
+		?>
+        <label style="display: block"><input type="radio" name="magick-path-choice" value="user"/> Specify the path for
+            magick</label>
+        <div>
+            <input style="width: 30em" type="text" name="magick-path"
+                   placeholder=""/>magick
+        </div>
+		<?php
 	}
 }
 
 
-if (is_admin())
+if (is_admin()) {
 	$tex_viewer_settings_page = new TeXViewerSettingsPage();
+	$tex_viewer_settings_page->populate_xelatex_info();
+	$tex_viewer_settings_page->populate_magick_info();
+
+}
