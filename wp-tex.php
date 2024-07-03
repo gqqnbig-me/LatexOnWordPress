@@ -368,6 +368,11 @@ class TeXViewerSettingsPage
 	 */
 	public function create_admin_page()
 	{
+		// check user capabilities
+		if (!current_user_can('manage_options'))
+			return;
+
+
 		$handle = popen('xelatex --version', 'r');
 		$xelatex_output = '';
 		if ($handle !== false) {
