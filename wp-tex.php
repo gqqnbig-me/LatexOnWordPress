@@ -339,14 +339,19 @@ new Tex_Viewer_Plugin();
 
 class TeXViewerSettingsPage
 {
+	private const page_slug = "tex-viewer";
+
 	/**
 	 * Start up
 	 */
 	public function __construct()
 	{
+		// Fires before the administration menu loads in the admin.
 		add_action('admin_menu', array($this, 'add_plugin_page'));
-//		add_action('admin_init', array($this, 'page_init'));
+		// Fires as an admin screen or script is being initialized.
+		add_action('admin_init', array($this, 'page_init'));
 	}
+
 
 	/**
 	 * Add options page
@@ -372,42 +377,77 @@ class TeXViewerSettingsPage
 		if (!current_user_can('manage_options'))
 			return;
 
+		// add error/update messages
 
-		$handle = popen('xelatex --version', 'r');
-		$xelatex_output = '';
-		if ($handle !== false) {
-			$xelatex_output = fread($handle, 2096);
-			pclose($handle);
+		// check if the user have submitted the settings
+		// WordPress will add the "settings-updated" $_GET parameter to the url
+		if (isset($_GET['settings-updated'])) {
+			// add settings saved message with the class of "updated"
+			add_settings_error('tex_viewer_messages', 'tex_viewer_messages', 'Settings Saved', 'updated');
 		}
-		if (strpos($xelatex_output, 'XeTeX') === false)
-			$xelatex_output = 'Not Found';
 
-		$handle = popen('magick --version', 'r');
-		$magick_output = '';
-		if ($handle !== false) {
-			$magick_output = fread($handle, 2096);
-			pclose($handle);
-		}
-		if (strpos($magick_output, 'ImageMagick') === false)
-			$magick_output = 'Not Found';
+		// show error/update messages
+		settings_errors('tex_viewer_messages');
 
 		?>
         <div class="wrap">
-            <h2>Tex Viewer Settings</h2>
-            <div>
-                xelatex:
-                <div>
-					<?= nl2br(esc_html($xelatex_output)) ?>
-                </div>
-            </div>
-            <div>
-                magick:
-                <div>
-					<?= nl2br(esc_html($magick_output)) ?>
-                </div>
-            </div>
+            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <form action="options.php" method="post">
+				<?php
+				// output security fields for the registered setting "wporg"
+				settings_fields('tex-viewer');
+				// output setting sections and their fields
+				// (sections are registered for "wporg", each field is registered to a specific section)
+				do_settings_sections($this::page_slug);
+				// output save settings button
+				submit_button('Save Settings');
+				?>
+            </form>
         </div>
 		<?php
+	}
+
+	function page_init()
+	{
+		// Register a new setting for "wporg" page.
+		register_setting('tex-viewer', 'wporg_options');
+
+		$setting_section_id = 'tex-viewer-path';
+		// Register a new section in the "wporg" page.
+		add_settings_section(
+			$setting_section_id,
+			'Path settings', array($this, 'path_section_preamble'),
+			$this::page_slug
+		);
+	}
+
+	function path_section_preamble()
+	{
+		if (PHP_OS_FAMILY === 'Linux') {
+			?>
+            <div style="color:gray">
+                # On Linux, the <code>PATH</code> environment variable may be controlled by your web server (nginx or
+                apache).<br>
+                # Changing <code>/etc/environment</code>, <code>/etc/sudoers</code>, or <code>/etc/profile</code> are
+                in vain.
+            </div>
+			<?php
+
+			$handle = popen('env', 'r');
+			$env_output = null;
+			if ($handle !== false) {
+				$env_output = fread($handle, 2096);
+				pclose($handle);
+			}
+			if ($env_output) {
+				?>
+                <div>$ env</div>
+				<div style="color:#0550ae">
+					<?= nl2br(esc_html($env_output)) ?>
+				</div>
+				<?php
+			}
+		}
 	}
 }
 
