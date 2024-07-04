@@ -481,33 +481,38 @@ class TeXViewerSettingsPage
 
 	function path_section_preamble()
 	{
-
-
-		if (PHP_OS_FAMILY === 'Linux') {
-			?>
-            <div style="color:gray">
-                # On Linux, the <code>PATH</code> environment variable may be controlled by your web server (nginx or
-                apache).<br>
-                # Changing <code>/etc/environment</code>, <code>/etc/sudoers</code>, or <code>/etc/profile</code> are
-                in vain.
-            </div>
-			<?php
-
-			$handle = popen('env', 'r');
-			$env_output = null;
-			if ($handle !== false) {
-				$env_output = fread($handle, 2096);
-				pclose($handle);
-			}
-			if ($env_output) {
-				?>
-                <div>$ env</div>
-				<div style="color:#0550ae">
-					<?= nl2br(esc_html($env_output)) ?>
-				</div>
-				<?php
-			}
+		if (PHP_OS_FAMILY !== 'Windows') {
+			echo '<div style="color:gray">';
+			echo '# On Linux, the <code>PATH</code> environment variable may be controlled by your web server (nginx or apache).<br>';
+			echo '# Changing <code>/etc/environment</code>, <code>/etc/sudoers</code>, or <code>/etc/profile</code> are in vain.';
+			echo '</div>';
 		}
+
+		if (PHP_OS_FAMILY === 'Windows')
+			echo '<div>$ set</div>';
+		else
+			echo '<div>$ env</div>';
+		$env = getenv();
+
+		$filtered_env = array_filter($env, function ($key) {
+			$output_keys = array('home', 'user', 'pwd', 'path');
+			foreach ($output_keys as $output_key) {
+				if (stripos($key, $output_key) !== false)
+					return true;
+			}
+			return false;
+		}, ARRAY_FILTER_USE_KEY);
+
+		$env_output = '';
+		foreach ($filtered_env as $key => $value) {
+			$env_output .= "$key=$value\n";
+		}
+
+		echo '<div style="color:#0550ae">';
+		echo nl2br(esc_html($env_output));
+		echo '</div>';
+
+
 		$options = get_option($this::options_name);
 		if ($options === false)
 			$options = array();
