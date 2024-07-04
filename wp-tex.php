@@ -128,25 +128,33 @@ function get_proc_output($handle, $pipes, &$stdout, &$stderr): int
 	$timeout_in_second = 60;
 	$start = microtime(true);
 	$status = null;
+	$exitcode = null;
 	while (microtime(true) - $start < $timeout_in_second) {
 		$status = proc_get_status($handle);
 
 		$stdout .= stream_get_contents($pipes[1]);
 		$stderr .= stream_get_contents($pipes[2]);
-		if (!$status['running'])
+		if (!$status['running']) {
+			// Only first call of this function return real value, next calls return -1.
+			// So I have to capture it immediately.
+			$exitcode = $status['exitcode'];
 			break;
+		}
 
 		usleep(1000);
 	}
 
 	if (is_null($status) == false && $status['running']) {
+		assert(is_null($exitcode));
 		proc_terminate($handle);
 	}
 	$stdout .= stream_get_contents($pipes[1]);
 	$stderr .= stream_get_contents($pipes[2]);
-	$exitcode = proc_close($handle);
-
-	return $exitcode;
+	proc_close($handle);
+	if (is_null($exitcode))
+		return -1;
+	else
+		return $exitcode;
 }
 
 /**
