@@ -507,6 +507,8 @@ class TeXViewerSettingsPage
 		foreach ($filtered_env as $key => $value) {
 			$env_output .= "$key=$value\n";
 		}
+		if (array_key_exists(strtolower('path'), array_change_key_case($filtered_env, CASE_LOWER)) === false && PHP_OS_FAMILY !== 'Windows')
+			$env_output .= "PATH=" . shell_exec('echo $PATH') . "\n";
 
 		echo '<div style="color:#0550ae">';
 		echo nl2br(esc_html($env_output));
