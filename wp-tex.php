@@ -31,9 +31,11 @@ class Tex_Viewer_Plugin
 
 	function plugin_activating()
 	{
-
 		$this->register_custom_post_type_compiled_figures();
 		flush_rewrite_rules();
+		
+		add_option('xelatex-path');
+		add_option('magick-path');
 	}
 
 
