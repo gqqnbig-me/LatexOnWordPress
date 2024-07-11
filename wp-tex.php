@@ -569,21 +569,16 @@ class TeXViewerSettingsPage
 	function choose_xelatex_path()
 	{
 		// Get the value of the setting we've registered with register_setting()
-		$options = get_option('wporg_options');
+		$options = get_option('xelatex-path');
 
-		if (is_null($this->xelatex_info))
-			echo '<label style="display: block"><input disabled type="radio"  name="xelatex-path-choice" value="default"/> Use default xelatex (NOT FOUND) </label>';
-		else {
-			echo '<label style="display: block"><input type="radio"  name="xelatex-path-choice" value="default"/> Use default xelatex</label>';
-			echo '<pre>$ xelatex --version <div style="color:#0550ae">' . esc_html($this->xelatex_info) . '</div></pre>';
-		}
+		echo '<pre>$ xelatex --version <div style="color:#0550ae">' . esc_html($this->xelatex_info) . '</div></pre>';
 
 		?>
         <label style="display: block"><input type="radio" name="xelatex-path-choice" value="user"/> Specify the path for
             xelatex</label>
         <div>
             <input style="width: 30em" type="text" name="xelatex-path"
-                   placeholder="/opt/texlive2024/bin/x86_64-linux/"/>xelatex
+                   placeholder="/opt/texlive2024/bin/x86_64-linux/" value="<?= esc_html($options) ?>"/>
         </div>
 		<?php
 	}
@@ -591,20 +586,15 @@ class TeXViewerSettingsPage
 	function choose_magick_path()
 	{
 		// Get the value of the setting we've registered with register_setting()
-		$options = get_option('wporg_options');
+		$options = get_option('magick-path');
 
-		if (is_null($this->magick_info))
-			echo '<label style="display: block"><input disabled type="radio"  name="magick-path-choice" value="default"/> Use default magick (NOT FOUND) </label>';
-		else {
-			echo '<label style="display: block"><input type="radio"  name="magick-path-choice" value="default"/> Use default magick</label>';
-			echo '<pre>' . esc_html($this->magick_info) . '</pre>';
-		}
+		echo '<pre>' . esc_html($this->magick_info) . '</pre>';
 		?>
         <label style="display: block"><input type="radio" name="magick-path-choice" value="user"/> Specify the path for
             magick</label>
         <div>
             <input style="width: 30em" type="text" name="magick-path"
-                   placeholder=""/>magick
+                   placeholder="" value="<?= esc_html($options) ?>"/>
         </div>
 		<?php
 	}
