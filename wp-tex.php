@@ -274,6 +274,7 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 				2 => ["pipe", "w"],  // stderr
 			], $pipes, null, null, ['bypass_shell' => true]);
 
+
 			if (!is_resource($handle)) {
 				set_transient('latex_compilation_log_' . $post_id, "Command line failed:\n" . $magick_command, MINUTE_IN_SECONDS * 5);
 				return;
@@ -300,7 +301,6 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 	}
 
 	}
-
 
 	function display_compilation_log()
 	{
@@ -335,7 +335,6 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 }
 
 new Tex_Viewer_Plugin();
-
 
 class TeXViewerSettingsPage
 {
@@ -481,12 +480,13 @@ class TeXViewerSettingsPage
 
 	function path_section_preamble()
 	{
-		if (PHP_OS_FAMILY !== 'Windows') {
-			echo '<div style="color:gray">';
-			echo '# On Linux, the <code>PATH</code> environment variable may be controlled by your web server (nginx or apache).<br>';
-			echo '# Changing <code>/etc/environment</code>, <code>/etc/sudoers</code>, or <code>/etc/profile</code> are in vain.';
-			echo '</div>';
-		}
+//		if (PHP_OS_FAMILY !== 'Windows') {
+		echo '<div style="color:gray">';
+		echo '# On Linux, the <code>PATH</code> environment variable may be sanitized by your web server (nginx or apache),<br>';
+		echo '# php-fpm (fastcgi), and php itself. Changing it is very difficult.<br>';
+		echo "# If your executable can't be not found, specifying its path is way easier.";
+		echo '</div>';
+//		}
 
 		if (PHP_OS_FAMILY === 'Windows')
 			echo '<div>$ set</div>';
@@ -495,6 +495,8 @@ class TeXViewerSettingsPage
 		$env = getenv();
 
 		$filtered_env = array_filter($env, function ($key) {
+			if (stripos($key, 'http') !== false)
+				return false;
 			$output_keys = array('home', 'user', 'pwd', 'path');
 			foreach ($output_keys as $output_key) {
 				if (stripos($key, $output_key) !== false)
