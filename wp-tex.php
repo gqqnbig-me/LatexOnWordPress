@@ -26,6 +26,8 @@ class Tex_Viewer_Plugin
 		add_action('save_post', array($this, 'save_meta_boxes'), 10, 2);
 		add_action('admin_notices', array($this, 'display_compilation_log'));
 		add_filter('single_template', array($this, 'custom_plugin_register_templates'));
+		add_action('activated_plugin', array($this, 'plugin_activated'));
+
 		register_activation_hook(__FILE__, array($this, 'plugin_activating'));
 
 	}
@@ -37,6 +39,26 @@ class Tex_Viewer_Plugin
 		
 		add_option('xelatex-path');
 		add_option('magick-path');
+	}
+
+	function plugin_activated($plugin)
+	{
+		if ($plugin != plugin_basename(__FILE__))
+			return;
+
+		// check for dependencies and redirect to the settings page.
+		// register_activation_hook can't do this.
+		$xelatex_path = gqqnbig\get_executable_path('xelatex');
+		if (!is_null($xelatex_path))
+			update_option('xelatex-path', $xelatex_path);
+
+
+		$magick_path = gqqnbig\get_executable_path('magick');
+		if (!is_null($magick_path))
+			update_option('magick-path', $magick_path);
+
+		if (empty($xelatex_path) || empty($magick_path))
+			exit(wp_redirect(admin_url('options-general.php?page=tex-viewer-settings')));
 	}
 
 
