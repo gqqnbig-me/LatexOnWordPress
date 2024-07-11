@@ -480,13 +480,21 @@ class TeXViewerSettingsPage
 
 	function path_section_preamble()
 	{
-//		if (PHP_OS_FAMILY !== 'Windows') {
-		echo '<div style="color:gray">';
-		echo '# On Linux, the <code>PATH</code> environment variable may be sanitized by your web server (nginx or apache),<br>';
-		echo '# php-fpm (fastcgi), and php itself. Changing it is very difficult.<br>';
-		echo "# If your executable can't be not found, specifying its path is way easier.";
-		echo '</div>';
-//		}
+		?>
+        <div>
+            <p>On plugin activation, Tex Viewer tries to detect the path of xelatex and magick.
+                If it fails, users are redirected to this page to specify the path.
+            <p>The auto-detection is based on <?= PHP_OS_FAMILY === 'Windows' ? 'the Windows command <code>where</code>' : 'the Bash builtin <code>type</code>' ?>,
+                which reads the <code>PATH</code> environment variable.
+        </div>
+		<?php
+		if (PHP_OS_FAMILY !== 'Windows') {
+            ?>
+            <p>On Linux, the <code>PATH</code> environment variable may be sanitized by your web server (nginx or apache),
+		        php-fpm (fastcgi), and php itself. Changing it is very difficult.
+		    <p> Specifying a path is way easier.
+            <?php
+		}
 
 		if (PHP_OS_FAMILY === 'Windows')
 			echo '<div>$ set</div>';
