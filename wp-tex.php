@@ -4,6 +4,7 @@
  * Description: Allow users to write LaTeX (mainly tikz) code in a post, and this plugin will convert the post to an image. 
  * Version: 0.1
  * Author: gqqnbig
+ * Requires PHP: 7.4
  */
 
 require_once 'utilities.php';
