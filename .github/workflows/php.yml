@@ -1,0 +1,25 @@
+name: PHP 
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.4'  # Replace with your PHP version
+        # I do not need composer yet.
+        tools: none
+        extensions: mbstring, xml  # Add any extensions your project requires
+
+    - name: Run PHPUnit tests
+      run: ./phpunit-9.6.20.phar .
