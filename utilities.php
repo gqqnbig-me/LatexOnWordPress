@@ -28,6 +28,11 @@ function get_executable_path(string $executable_name): ?string
 
 function get_proc_output($handle, $pipes, string &$stdout, string &$stderr): int
 {
+	// I am using phpunit 9.6, which is the last version that supports PHP 7.4.
+	// phpunit 9.6 may have bugs with the option --enforce-time-limit.
+	// Unfortunately, phpunit 9.6 is out of support.
+	// Consequently, I can't test the timeout feature of this function.
+
 	// Reference: https://gist.github.com/Youka/f8102eacfccc35982c29
 	$timeout_in_second = 60;
 	$start = microtime(true);
