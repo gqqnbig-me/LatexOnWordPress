@@ -24,3 +24,44 @@ function get_executable_path(string $executable_name): ?string
 
 	return $path;
 }
+
+
+function get_proc_output($handle, $pipes, string &$stdout, string &$stderr): int
+{
+	// I am using phpunit 9.6, which is the last version that supports PHP 7.4.
+	// phpunit 9.6 may have bugs with the option --enforce-time-limit.
+	// Unfortunately, phpunit 9.6 is out of support.
+	// Consequently, I can't test the timeout feature of this function.
+
+	// Reference: https://gist.github.com/Youka/f8102eacfccc35982c29
+	$timeout_in_second = 60;
+	$start = microtime(true);
+	$status = null;
+	$exitcode = null;
+	while (microtime(true) - $start < $timeout_in_second) {
+		$status = proc_get_status($handle);
+
+		$stdout .= stream_get_contents($pipes[1]);
+		$stderr .= stream_get_contents($pipes[2]);
+		if (!$status['running']) {
+			// Only first call of this function return real value, next calls return -1.
+			// So I have to capture it immediately.
+			$exitcode = $status['exitcode'];
+			break;
+		}
+
+		usleep(1000);
+	}
+
+	if (is_null($status) == false && $status['running']) {
+		assert(is_null($exitcode));
+		proc_terminate($handle);
+	}
+	$stdout .= stream_get_contents($pipes[1]);
+	$stderr .= stream_get_contents($pipes[2]);
+	proc_close($handle);
+	if (is_null($exitcode))
+		return -1;
+	else
+		return $exitcode;
+}

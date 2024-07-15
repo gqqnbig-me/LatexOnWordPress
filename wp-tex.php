@@ -6,6 +6,7 @@
  * Author: gqqnbig
  */
 
+require_once 'utilities.php';
 
 class Tex_Viewer_Plugin
 {
@@ -140,40 +141,6 @@ class Tex_Viewer_Plugin
 	}
 
 
-	private function get_proc_output($handle, $pipes, &$stdout, &$stderr): int
-	{
-    // Reference: https://gist.github.com/Youka/f8102eacfccc35982c29
-		$timeout_in_second = 60;
-		$start = microtime(true);
-		$status = null;
-	$exitcode = null;
-		while (microtime(true) - $start < $timeout_in_second) {
-			$status = proc_get_status($handle);
-
-		$stdout .= stream_get_contents($pipes[1]);
-		$stderr .= stream_get_contents($pipes[2]);
-		if (!$status['running']) {
-			// Only first call of this function return real value, next calls return -1.
-			// So I have to capture it immediately.
-			$exitcode = $status['exitcode'];
-				break;
-		}
-
-		usleep(1000);
-	}
-
-	if (is_null($status) == false && $status['running']) {
-		assert(is_null($exitcode));
-		proc_terminate($handle);
-	}
-	$stdout .= stream_get_contents($pipes[1]);
-	$stderr .= stream_get_contents($pipes[2]);
-	proc_close($handle);
-	if (is_null($exitcode))
-		return -1;
-	else
-		return $exitcode;
-}
 
 /**
  * @param WP_Post $post
@@ -204,7 +171,7 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 		return;
 	}
 
-		$result_code = $this->get_proc_output($handle, $pipes, $stdout, $stderr);
+		$result_code = gqqnbig\get_proc_output($handle, $pipes, $stdout, $stderr);
 
 	if ($result_code != 0) {
 		$message = "xelatex command line output:\n";
@@ -302,7 +269,7 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 				return;
 			}
 
-				$exit_code = $this->get_proc_output($handle, $pipes, $stdout, $stderr);
+				$exit_code = gqqnbig\get_proc_output($handle, $pipes, $stdout, $stderr);
 
 			if ($exit_code != 0) {
 				$message = "magick command line error:\n";
