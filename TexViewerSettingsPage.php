@@ -161,6 +161,16 @@ class TexViewerSettingsPage
 		}
 	}
 
+	function verify_dependency(string $binary, string $version_keyword)
+	{
+		$path = isset($_POST["$binary-path"]) ? sanitize_text_field($_POST["$binary-path"]) : '';
+		$version_info = '';
+		$err = $this->verify_executable($path, $version_keyword, $version_info);
+		if (!empty($err))
+			set_transient("tex-viewer-settings-$binary-error", $err, MINUTE_IN_SECONDS * 5);
+		else
+			set_transient("tex-viewer-settings-$binary-version", $version_info, MINUTE_IN_SECONDS * 5);
+	}
 
 	function page_init()
 	{
@@ -169,18 +179,10 @@ class TexViewerSettingsPage
 		register_setting('tex-viewer', 'magick-path');
 
 		if (isset($_POST['verify-xelatex'])) {
-			$xelatex_path = isset($_POST['xelatex-path']) ? sanitize_text_field($_POST['xelatex-path']) : '';
-			$xelatex_version = '';
-			$err = $this->verify_executable($xelatex_path, 'XeTeX', $xelatex_version);
-			if (!empty($err))
-				set_transient('tex-viewer-settings-xelatex-error', $err, MINUTE_IN_SECONDS * 5);
-			else
-				set_transient('tex-viewer-settings-xelatex-version', $xelatex_version, MINUTE_IN_SECONDS * 5);
-
+			$this->verify_dependency('xelatex', 'XeTeX');
 		}
 		if (isset($_POST['verify-magick'])) {
-			$magick_path = isset($_POST['magick-path']) ? sanitize_text_field($_POST['magick-path']) : '';
-			$this->verify_executable($magick_path, 'ImageMagick');
+			$this->verify_dependency('magick', 'ImageMagick');
 		}
 
 
