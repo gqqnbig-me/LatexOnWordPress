@@ -25,7 +25,17 @@ class Tex_Viewer_Plugin
 		add_action('save_post', array($this, 'save_meta_boxes'), 10, 2);
 		add_action('admin_notices', array($this, 'display_compilation_log'));
 		add_filter('single_template', array($this, 'custom_plugin_register_templates'));
+		register_activation_hook(__FILE__, array($this, 'plugin_activating'));
+
 	}
+
+	function plugin_activating()
+	{
+
+		$this->register_custom_post_type_compiled_figures();
+		flush_rewrite_rules();
+	}
+
 
 	function register_custom_post_type_compiled_figures()
 	{
