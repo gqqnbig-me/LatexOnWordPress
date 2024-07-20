@@ -365,7 +365,4 @@ new Tex_Viewer_Plugin();
 
 if (is_admin()) {
 	$tex_viewer_settings_page = new gqqnbig\TexViewerSettingsPage();
-	$tex_viewer_settings_page->populate_xelatex_info();
-	$tex_viewer_settings_page->populate_magick_info();
-
 }

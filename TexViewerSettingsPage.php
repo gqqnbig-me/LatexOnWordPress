@@ -43,31 +43,6 @@ class TexViewerSettingsPage
 		}
 	}
 
-	public function populate_xelatex_info()
-	{
-		$handle = popen('xelatex --version', 'r');
-		if ($handle !== false) {
-			$this->xelatex_info = fread($handle, 2096);
-			pclose($handle);
-
-			if (strpos($this->xelatex_info, 'XeTeX') === false)
-				$this->xelatex_info = null;
-		}
-
-	}
-
-	public function populate_magick_info()
-	{
-		$handle = popen('magick --version', 'r');
-		if ($handle !== false) {
-			$this->magick_info = fread($handle, 2096);
-			pclose($handle);
-
-			if (strpos($this->magick_info, 'ImageMagick') === false)
-				$this->magick_info = null;
-		}
-	}
-
 	/**
 	 * Add options page
 	 */
