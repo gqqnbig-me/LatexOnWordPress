@@ -174,7 +174,6 @@ class TexViewerSettingsPage
 
 	function page_init()
 	{
-		// Register a new setting for "wporg" page.
 		register_setting('tex-viewer', 'xelatex-path');
 		register_setting('tex-viewer', 'magick-path');
 
@@ -187,27 +186,33 @@ class TexViewerSettingsPage
 
 
 		$setting_section_id = 'tex-viewer-path';
-		// Register a new section in the "wporg" page.
 		add_settings_section(
 			$setting_section_id,
 			'Path settings', array($this, 'path_section_preamble'),
 			$this::page_slug
 		);
 
-		// Register a new field in the "wporg_section_developers" section, inside the "wporg" page.
 		add_settings_field(
 			'tex-viewer-xelatex-path',
 			'path for xelatex',
-			array($this, 'choose_xelatex_path'),
+			array($this, 'build_verifiable_path_inputbox'),
 			$this::page_slug,
-			$setting_section_id);
+			$setting_section_id,
+			array(
+				'label_for' => 'tex_viewer_xelatex_input',
+				'name' => 'xelatex',
+			));
 
 		add_settings_field(
 			'tex-viewer-magick-path',
 			'path for magick',
-			array($this, 'choose_magick_path'),
+			array($this, 'build_verifiable_path_inputbox'),
 			$this::page_slug,
-			$setting_section_id);
+			$setting_section_id,
+			array(
+				'label_for' => 'tex_viewer_magick_input',
+				'name' => 'magick',
+			));
 	}
 
 	function path_section_preamble()
@@ -229,38 +234,22 @@ class TexViewerSettingsPage
 	}
 
 
-	function choose_xelatex_path()
+	function build_verifiable_path_inputbox($args)
 	{
-		$option = get_option('xelatex-path');
+		$name = $args['name'];
+		$option = get_option("$name-path");
 		?>
-        <input style="width: 30em" type="text" name="xelatex-path"
-               value="<?= esc_attr($option) ?>"/>
-        <input type="submit" name="verify-xelatex" value="Verify">
+        <input style="width: 30em" type="text" id="<?= esc_attr( $args['label_for'] ); ?>"
+               name="<?= esc_attr("$name-path") ?>" value="<?= esc_attr($option) ?>"/>
+        <input type="submit" name="<?= esc_attr("verify-$name") ?>" value="Verify">
 		<?php
-		$xelatex_version = get_transient('tex-viewer-settings-xelatex-version');
+		$xelatex_version = get_transient("tex-viewer-settings-$name-version");
 		if (!empty($xelatex_version)) {
 			echo '<pre>' . esc_html($xelatex_version) . '</pre>';
 		}
-		$error = get_transient('tex-viewer-settings-xelatex-error');
+		$error = get_transient("tex-viewer-settings-$name-error");
 		if (!empty($error)) {
 			echo '<div>' . $error . '</div>';
 		}
-
-	}
-
-	function choose_magick_path()
-	{
-		// Get the value of the setting we've registered with register_setting()
-		$options = get_option('magick-path');
-
-		echo '<pre>' . esc_html($this->magick_info) . '</pre>';
-		?>
-        <label style="display: block"><input type="radio" name="magick-path-choice" value="user"/> Specify the path for
-            magick</label>
-        <div>
-            <input style="width: 30em" type="text" name="magick-path"
-                   placeholder="" value="<?= esc_html($options) ?>"/>
-        </div>
-		<?php
 	}
 }
