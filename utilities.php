@@ -26,7 +26,14 @@ function get_executable_path(string $executable_name): ?string
 }
 
 
-function get_proc_output($handle, $pipes, string &$stdout, string &$stderr): int
+/***
+ * @param $handle
+ * @param $pipes
+ * @param string|null $stdout This argument will be reset.
+ * @param string|null $stderr This argument will be reset.
+ * @return int
+ */
+function get_proc_output($handle, $pipes, ?string &$stdout, ?string &$stderr): int
 {
 	// I am using phpunit 9.6, which is the last version that supports PHP 7.4.
 	// phpunit 9.6 may have bugs with the option --enforce-time-limit.
@@ -38,6 +45,8 @@ function get_proc_output($handle, $pipes, string &$stdout, string &$stderr): int
 	$start = microtime(true);
 	$status = null;
 	$exitcode = null;
+	$stdout = '';
+	$stderr = '';
 	while (microtime(true) - $start < $timeout_in_second) {
 		$status = proc_get_status($handle);
 
