@@ -4,9 +4,11 @@
  * Description: Allow users to write LaTeX (mainly tikz) code in a post, and this plugin will convert the post to an image. 
  * Version: 0.1
  * Author: gqqnbig
+ * Requires PHP: 7.4
  */
 
 require_once 'utilities.php';
+require_once 'TexViewerSettingsPage.php';
 
 class Tex_Viewer_Plugin
 {
@@ -25,15 +27,39 @@ class Tex_Viewer_Plugin
 		add_action('save_post', array($this, 'save_meta_boxes'), 10, 2);
 		add_action('admin_notices', array($this, 'display_compilation_log'));
 		add_filter('single_template', array($this, 'custom_plugin_register_templates'));
+		add_action('activated_plugin', array($this, 'plugin_activated'));
+
 		register_activation_hook(__FILE__, array($this, 'plugin_activating'));
 
 	}
 
 	function plugin_activating()
 	{
-
 		$this->register_custom_post_type_compiled_figures();
 		flush_rewrite_rules();
+		
+		add_option('xelatex-path');
+		add_option('magick-path');
+	}
+
+	function plugin_activated($plugin)
+	{
+		if ($plugin != plugin_basename(__FILE__))
+			return;
+
+		// check for dependencies and redirect to the settings page.
+		// register_activation_hook can't do this.
+		$xelatex_path = gqqnbig\get_executable_path('xelatex');
+		if (!is_null($xelatex_path))
+			update_option('xelatex-path', $xelatex_path);
+
+
+		$magick_path = gqqnbig\get_executable_path('magick');
+		if (!is_null($magick_path))
+			update_option('magick-path', $magick_path);
+
+		if (empty($xelatex_path) || empty($magick_path))
+			exit(wp_redirect(admin_url('options-general.php?page=tex-viewer-settings')));
 	}
 
 
@@ -274,6 +300,7 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 				2 => ["pipe", "w"],  // stderr
 			], $pipes, null, null, ['bypass_shell' => true]);
 
+
 			if (!is_resource($handle)) {
 				set_transient('latex_compilation_log_' . $post_id, "Command line failed:\n" . $magick_command, MINUTE_IN_SECONDS * 5);
 				return;
@@ -300,7 +327,6 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 	}
 
 	}
-
 
 	function display_compilation_log()
 	{
@@ -335,3 +361,8 @@ function compile_latex(WP_Post $post, string $latex_code, string $compiled_fig_p
 }
 
 new Tex_Viewer_Plugin();
+
+
+if (is_admin()) {
+	$tex_viewer_settings_page = new gqqnbig\TexViewerSettingsPage();
+}
