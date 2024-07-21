@@ -41,6 +41,13 @@ class TexViewerSettingsPage
 				delete_transient('tex-viewer-settings-xelatex-error');
 			}
 		}
+
+		if ($option_name === 'magick-path') {
+			if ($new_value !== $old_value) {
+				delete_transient('tex-viewer-settings-magick-version');
+				delete_transient('tex-viewer-settings-magick-error');
+			}
+		}
 	}
 
 	/**
