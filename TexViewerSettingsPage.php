@@ -150,8 +150,10 @@ class TexViewerSettingsPage
 		$err = $this->verify_executable($path, $version_keyword, $version_info);
 		if (!empty($err))
 			set_transient("tex-viewer-settings-$binary-error", $err, MINUTE_IN_SECONDS * 5);
-		else
+		else {
 			set_transient("tex-viewer-settings-$binary-version", $version_info, MINUTE_IN_SECONDS * 5);
+			add_settings_error('general', "run_$binary", "Run $binary successfully.", 'success');
+		}
 	}
 
 	function page_init()
